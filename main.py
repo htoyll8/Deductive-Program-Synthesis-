@@ -97,6 +97,39 @@ class TestRewriteStrategies(unittest.TestCase):
         simplified_ast = strategy.apply(multiplication_node)
         self.assertEqual(simplified_ast, left)
 
+class TestRewriteRuleDispatcher(unittest.TestCase):
+    def test_eliminate_addition_with_zero(self):
+        # Create an AST node representing 'x + 0'
+        left = Name(id='x', ctx=Load()) 
+        right = Constant(0)
+        addition_node = BinOp(left, Add(), right)
+
+        # Create an instance of the dispatcher
+        dispatcher = RewriteRuleDispatcher()
+
+        # Create an instance of the context
+        context = Context()
+
+        # Apply the strategy and check the result
+        simplified_ast = dispatcher.dispatch(addition_node, context)
+        self.assertEqual(simplified_ast, left)
+
+    def test_eliminate_multiplication_by_one(self):
+        # Create an AST node representing 'x + 0'
+        left = Name(id='x', ctx=Load()) 
+        right = Constant(1)
+        multiplication_node = BinOp(left, Mult(), right)
+
+        # Create an instance of the dispatcher
+        dispatcher = RewriteRuleDispatcher()
+
+        # Create an instance of the context
+        context = Context()
+
+        # Apply the strategy and check the result
+        simplified_ast = dispatcher.dispatch(multiplication_node, context)
+        self.assertEqual(simplified_ast, left)
+
 if __name__ == '__main__':
     unittest.main()
 
