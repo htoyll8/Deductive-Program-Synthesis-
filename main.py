@@ -47,18 +47,48 @@ class EliminateMultiplicationByOne:
         else: 
             return node.right
 
+class ConstantFolding: 
+
+    @classmethod
+    def check(cls, node: ast.BinOp) -> bool:
+        return isinstance(node.right, ast.Constant) and isinstance(node.left, ast.Constant)
+    
+    @classmethod
+    def apply(self, node: ast.AST) -> ast.AST:
+        if isinstance(node.right, ast.Constant) and isinstance(node.left, ast.Constant):
+            try: 
+                if isinstance(node.op, ast.Add):
+                    result = node.left.value + node.right.value
+                elif isinstance(node.op, ast.Sub):
+                    result = node.left.value - node.right.value
+                elif isinstance(node.op, ast.Mult):
+                    result = node.left.value * node.right.value
+                else: 
+                    return node # Operation not supported, return the original node
+            
+                return ast.Constant(value=result)
+            except Exception as error:
+                print("Error: ", error)
+                return node
+        else: 
+            return node
+
 class Visitor(ast.NodeTransformer):
     
     def visit_BinOp(self, node: ast.AST) -> ast.AST:
+        # Visit the children nodes and return the transformed node
+        self.generic_visit(node)
+
         if EliminateAdditionWithZero.check(node):
             return EliminateAdditionWithZero.apply(node)
         elif EliminateSubtractionByZero.check(node):
             return EliminateSubtractionByZero.apply(node)
         elif EliminateMultiplicationByOne.check(node):
             return EliminateMultiplicationByOne.apply(node)
+        elif ConstantFolding.check(node):
+            return ConstantFolding.apply(node)
         else:
-            # Visit the children nodes and return the transformed node
-            return self.generic_visit(node)
+            return node
 
 class TestRewriteStrategies(unittest.TestCase):
     def test_eliminate_addition_with_zero(self):
@@ -126,6 +156,28 @@ class TestRewriteStrategies(unittest.TestCase):
         # Apply the strategy and check the result
         simplified_ast = visitor.visit(multiplication_node)
         self.assertEqual(simplified_ast, right)
+
+    def test_constant_folding(self):
+        # Create an instance of Visitor
+        visitor = Visitor()
+
+        # Create an AST node representing '1 + 2'
+        left = ast.Constant(1) 
+        right = ast.Constant(2)
+        addition_node = ast.BinOp(left, ast.Add(), right)
+
+        # Apply the strategy and check the result
+        simplified_ast = visitor.visit(addition_node)
+        self.assertEqual(simplified_ast.value, 3)
+
+        # Create an AST node representing '(1 + 2) + 3'
+        left = ast.BinOp(ast.Constant(1), ast.Add(), ast.Constant(2))
+        right = ast.Constant(3)
+        addition_node = ast.BinOp(left, ast.Add(), right)
+
+        # Apply the strategy and check the result
+        simplified_ast = visitor.visit(addition_node)
+        self.assertEqual(simplified_ast.value, 6)
 
 if __name__ == '__main__':
     unittest.main()
