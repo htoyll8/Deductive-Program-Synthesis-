@@ -73,6 +73,9 @@ class ConstantFolding:
         else: 
             return node
 
+class EliminateDeadCode:
+    pass
+
 class Visitor(ast.NodeTransformer):
     
     def visit_BinOp(self, node: ast.AST) -> ast.AST:
